@@ -1,0 +1,133 @@
+Mini NPU 시뮬레이터 실행 기록
+환경: Python 3.11.6 / Windows
+각 실행의 stdin을 기록하고 프로그램의 실제 출력을 이어 붙였습니다.
+
+=== 3×3 사용자 입력 및 재입력 ===
+$ python mini_npu.py
+[입력]
+1
+1 0
+1 a 0
+0 1 0
+1 1 1
+0 1 0
+1 0 1
+0 1 0
+1 0 1
+0 1 0
+1 1 1
+0 1 0
+[출력]
+Mini NPU 시뮬레이터
+1. 사용자 입력 (3×3)
+2. JSON 데이터 분석
+모드 선택 > 필터 A 입력 (3줄, 한 줄에 숫자 3개):
+  1행 > 입력 형식 오류: 숫자 3개를 공백으로 구분해 같은 행을 다시 입력하세요.
+  1행 > 입력 형식 오류: 숫자 3개를 공백으로 구분해 같은 행을 다시 입력하세요.
+  1행 >   2행 >   3행 > 필터 B 입력 (3줄, 한 줄에 숫자 3개):
+  1행 >   2행 >   3행 > 필터 A·B 저장 완료 (각 3×3)
+패턴 입력 (3줄, 한 줄에 숫자 3개):
+  1행 >   2행 >   3행 > 
+점수: A=5 | B=1
+두 필터 MAC 계산 시간: 0.008200 ms
+판정: A
+
+성능 분석 (패턴 1개, 필터 1개) | 반복: 1000회/크기
+크기  | 평균 시간(ms) | MAC 횟수(N²)
+3×3 | 0.000978 | 9
+
+=== 3×3 동점 판정 ===
+$ python mini_npu.py
+[입력]
+1
+0 1 0
+1 1 1
+0 1 0
+1 0 1
+0 1 0
+1 0 1
+0 0 0
+0 0 0
+0 0 0
+[출력]
+Mini NPU 시뮬레이터
+1. 사용자 입력 (3×3)
+2. JSON 데이터 분석
+모드 선택 > 필터 A 입력 (3줄, 한 줄에 숫자 3개):
+  1행 >   2행 >   3행 > 필터 B 입력 (3줄, 한 줄에 숫자 3개):
+  1행 >   2행 >   3행 > 필터 A·B 저장 완료 (각 3×3)
+패턴 입력 (3줄, 한 줄에 숫자 3개):
+  1행 >   2행 >   3행 > 
+점수: A=0 | B=0
+두 필터 MAC 계산 시간: 0.007700 ms
+판정: 판정 불가 (UNDECIDED)
+
+성능 분석 (패턴 1개, 필터 1개) | 반복: 1000회/크기
+크기  | 평균 시간(ms) | MAC 횟수(N²)
+3×3 | 0.000900 | 9
+
+=== 시연용 JSON 분석 ===
+$ python mini_npu.py
+[입력]
+2
+[출력]
+Mini NPU 시뮬레이터
+1. 사용자 입력 (3×3)
+2. JSON 데이터 분석
+모드 선택 > 
+데이터 파일: data.json
+size_5_1 | Cross=9 | X=1 | 차이=8 | 판정: Cross | expected: Cross | PASS
+size_5_2 | Cross=1 | X=9 | 차이=8 | 판정: X | expected: X | PASS
+size_13_1 | Cross=25 | X=1 | 차이=24 | 판정: Cross | expected: Cross | PASS
+size_13_2 | Cross=1 | X=25 | 차이=24 | 판정: X | expected: X | PASS
+size_25_1 | Cross=49 | X=1 | 차이=48 | 판정: Cross | expected: Cross | PASS
+size_25_2 | Cross=1 | X=49 | 차이=48 | 판정: X | expected: X | PASS
+
+성능 분석 (패턴 1개, 필터 1개) | 반복: 1000회/크기
+크기  | 평균 시간(ms) | MAC 횟수(N²)
+3×3 | 0.000966 | 9
+5×5 | 0.002085 | 25
+13×13 | 0.011429 | 169
+25×25 | 0.042150 | 625
+
+전체: 6 | PASS: 6 | FAIL: 0
+실패 사례: 없음
+
+=== 크기 불일치 재현 ===
+$ python mini_npu.py --data tests/fixtures/invalid_size.json
+[입력]
+2
+[출력]
+Mini NPU 시뮬레이터
+1. 사용자 입력 (3×3)
+2. JSON 데이터 분석
+모드 선택 > 
+데이터 파일: invalid_size.json
+size_5_1 | Cross=N/A | X=N/A | 판정: N/A | FAIL | 크기 불일치: 입력 패턴의 행은 5개여야 합니다 (실제 4개).
+size_5_2 | Cross=1 | X=9 | 차이=8 | 판정: X | expected: X | PASS
+
+성능 분석 (패턴 1개, 필터 1개) | 반복: 1000회/크기
+크기  | 평균 시간(ms) | MAC 횟수(N²)
+3×3 | 0.001235 | 9
+5×5 | 0.002541 | 25
+13×13 | 0.013322 | 169
+25×25 | 0.040685 | 625
+
+전체: 2 | PASS: 1 | FAIL: 1
+실패 사례:
+  - size_5_1: 크기 불일치: 입력 패턴의 행은 5개여야 합니다 (실제 4개).
+
+=== 자동 검증 ===
+$ python tests/check_cases.py
+[출력]
+test_bad_size_is_reported_and_next_case_runs (__main__.ConsoleTests.test_bad_size_is_reported_and_next_case_runs) ... ok
+test_bundled_sample_passes_and_reports_all_sizes (__main__.ConsoleTests.test_bundled_sample_passes_and_reports_all_sizes) ... ok
+test_manual_mode_retries_and_classifies (__main__.ConsoleTests.test_manual_mode_retries_and_classifies) ... ok
+test_manual_mode_zero_pattern_is_undecided (__main__.ConsoleTests.test_manual_mode_zero_pattern_is_undecided) ... ok
+test_epsilon_and_strict_boundary (__main__.ScoreTests.test_epsilon_and_strict_boundary) ... ok
+test_mac_matches_hand_calculation (__main__.ScoreTests.test_mac_matches_hand_calculation) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.592s
+
+OK
