@@ -1,4 +1,4 @@
-"""Classify square patterns using two filters and explicit MAC loops."""
+"""입력 패턴과 두 필터의 MAC 점수를 비교하는 콘솔 프로그램."""
 
 import argparse
 import json
@@ -14,13 +14,14 @@ MATRIX_SIZES = (3, 5, 13, 25)
 JSON_SIZES = (5, 13, 25)
 DEFAULT_DATA = Path(__file__).resolve().with_name("data.json")
 CASE_KEY = re.compile(r"size_(5|13|25)_[0-9]+")
+# 정답의 +와 필터 키 cross는 같은 모양이므로 비교할 때는 둘 다 Cross로 쓴다.
 FILTER_KEYS = {"Cross": "cross", "X": "x"}
 EXPECTED_LABELS = {"+": "Cross", "x": "X"}
 PATTERN_3 = [[0, 1, 0], [1, 1, 1], [0, 1, 0]]
 
 
 def validate_matrix(matrix, size, label):
-    """Require a numeric N×N matrix before passing it to mac()."""
+    """각 행과 열의 개수, 각 칸의 숫자를 검사한다."""
     if not isinstance(matrix, list):
         raise ValueError(f"{label}: 2차원 배열이 필요합니다.")
     if len(matrix) != size:
@@ -45,7 +46,7 @@ def validate_matrix(matrix, size, label):
 
 
 def mac(pattern, filter_matrix):
-    """Return one MAC score. Inputs must have been validated as equal squares."""
+    """크기가 같은 두 배열에서 같은 위치의 값을 곱해 모두 더한다."""
     score = 0
     size = len(pattern)
     for row in range(size):
@@ -55,7 +56,6 @@ def mac(pattern, filter_matrix):
 
 
 def compare_scores(score_a, score_b, epsilon=EPSILON):
-    """Classify two scores using a strict absolute difference."""
     if not (math.isfinite(score_a) and math.isfinite(score_b)):
         raise ValueError("MAC 점수가 유한한 숫자 범위를 벗어났습니다.")
     if abs(score_a - score_b) < epsilon:
@@ -88,7 +88,6 @@ def read_matrix_3(label):
 
 
 def benchmark_input(size):
-    # Use deterministic, prebuilt inputs even when a JSON case is malformed.
     if size == 3:
         return PATTERN_3, PATTERN_3
     center = size // 2
@@ -101,6 +100,7 @@ def benchmark_mac(sizes, repeats=BENCHMARK_REPEATS):
     print(f"\n성능 분석 (패턴 1개, 필터 1개) | 반복: {repeats}회/크기")
     print("크기  | 평균 시간(ms) | MAC 횟수(N²)")
     for size in sizes:
+        # 배열을 만드는 시간이 MAC 측정에 섞이지 않도록 먼저 준비한다.
         pattern, filter_matrix = benchmark_input(size)
         start = perf_counter()
         for _ in range(repeats):
@@ -139,8 +139,8 @@ def load_data(path):
 
 
 def prepare_filters(filters):
-    by_size = {}
-    errors = {}
+    filters_by_size = {}
+    filter_errors = {}
     for size in JSON_SIZES:
         group_name = f"size_{size}"
         try:
@@ -153,17 +153,17 @@ def prepare_filters(filters):
                 validate_matrix(matrix, size, f"{group_name}.{raw_key} 필터")
                 normalized[label] = matrix
         except (ValueError, OverflowError) as exc:
-            errors[size] = str(exc)
+            filter_errors[size] = str(exc)
         else:
-            by_size[size] = normalized
-    return by_size, errors
+            filters_by_size[size] = normalized
+    return filters_by_size, filter_errors
 
 
-def evaluate_case(case_id, case, by_size, filter_errors):
-    key = CASE_KEY.fullmatch(case_id)
-    if not key:
+def read_case(case_id, case, filter_errors):
+    match = CASE_KEY.fullmatch(case_id)
+    if not match:
         raise ValueError("키 형식 오류: size_{5|13|25}_{숫자 인덱스}가 필요합니다.")
-    size = int(key.group(1))
+    size = int(match.group(1))
     if size in filter_errors:
         raise ValueError(filter_errors[size])
     if not isinstance(case, dict):
@@ -173,9 +173,12 @@ def evaluate_case(case_id, case, by_size, filter_errors):
     raw_expected = case.get("expected")
     if not isinstance(raw_expected, str) or raw_expected not in EXPECTED_LABELS:
         raise ValueError("expected 값은 '+' 또는 'x'여야 합니다.")
-    expected = EXPECTED_LABELS[raw_expected]
+    return size, pattern, EXPECTED_LABELS[raw_expected]
 
-    filters = by_size[size]
+
+def evaluate_case(case_id, case, filters_by_size, filter_errors):
+    size, pattern, expected = read_case(case_id, case, filter_errors)
+    filters = filters_by_size[size]
     score_cross = mac(pattern, filters["Cross"])
     score_x = mac(pattern, filters["X"])
     winner = compare_scores(score_cross, score_x)
@@ -185,7 +188,7 @@ def evaluate_case(case_id, case, by_size, filter_errors):
 
 def run_json(path):
     filters, patterns = load_data(path)
-    by_size, filter_errors = prepare_filters(filters)
+    filters_by_size, filter_errors = prepare_filters(filters)
     print(f"\n데이터 파일: {path.name}")
     for size, reason in filter_errors.items():
         print(f"필터 검증 오류 (size_{size}): {reason}")
@@ -194,7 +197,7 @@ def run_json(path):
     for case_id, case in patterns.items():
         try:
             cross, x, prediction, expected = evaluate_case(
-                case_id, case, by_size, filter_errors
+                case_id, case, filters_by_size, filter_errors
             )
         except (ValueError, OverflowError) as exc:
             print(f"{case_id} | Cross=N/A | X=N/A | 판정: N/A | FAIL | {exc}")
