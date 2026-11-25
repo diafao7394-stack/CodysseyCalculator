@@ -24,12 +24,14 @@ Mini NPU 시뮬레이터
 패턴 입력 (3줄, 한 줄에 숫자 3개):
   1행 >   2행 >   3행 >
 점수: A=5 | B=1
-두 필터 MAC 계산 시간: 0.003735 ms
+필터 A MAC 계산 시간: 0.003024 ms
+필터 B MAC 계산 시간: 0.001262 ms
+두 필터 MAC 계산 시간: 0.004286 ms
 판정: A
 
 성능 분석 (패턴 1개, 필터 1개) | 반복: 1000회/크기
 크기  | 평균 시간(ms) | MAC 횟수(N²)
-3×3 | 0.000572 | 9
+3×3 | 0.000527 | 9
 
 두 번째 행 재입력
 $ python mini_npu.py
@@ -51,19 +53,21 @@ Mini NPU 시뮬레이터
 1. 사용자 입력 (3×3)
 2. JSON 데이터 분석
 모드 선택 > 필터 A 입력 (3줄, 한 줄에 숫자 3개):
-  1행 >   2행 > 입력 형식 오류: 숫자 3개를 공백으로 구분해 같은 행을 다시 입력하세요.
-  2행 > 입력 형식 오류: 숫자 3개를 공백으로 구분해 같은 행을 다시 입력하세요.
+  1행 >   2행 > 입력 형식 오류: 3×3 배열은 한 행에 숫자 3개가 필요합니다. 공백으로 구분해 같은 행을 다시 입력하세요. 예: 0 1 0
+  2행 > 입력 형식 오류: 3×3 배열은 한 행에 숫자 3개가 필요합니다. 공백으로 구분해 같은 행을 다시 입력하세요. 예: 0 1 0
   2행 >   3행 > 필터 B 입력 (3줄, 한 줄에 숫자 3개):
   1행 >   2행 >   3행 > 필터 A·B 저장 완료 (각 3×3)
 패턴 입력 (3줄, 한 줄에 숫자 3개):
   1행 >   2행 >   3행 >
 점수: A=5 | B=1
+필터 A MAC 계산 시간: 0.002824 ms
+필터 B MAC 계산 시간: 0.001202 ms
 두 필터 MAC 계산 시간: 0.004026 ms
 판정: A
 
 성능 분석 (패턴 1개, 필터 1개) | 반복: 1000회/크기
 크기  | 평균 시간(ms) | MAC 횟수(N²)
-3×3 | 0.000570 | 9
+3×3 | 0.000546 | 9
 
 0으로 채운 패턴
 $ python mini_npu.py
@@ -88,12 +92,27 @@ Mini NPU 시뮬레이터
 패턴 입력 (3줄, 한 줄에 숫자 3개):
   1행 >   2행 >   3행 >
 점수: A=0 | B=0
-두 필터 MAC 계산 시간: 0.003766 ms
+필터 A MAC 계산 시간: 0.002905 ms
+필터 B MAC 계산 시간: 0.001362 ms
+두 필터 MAC 계산 시간: 0.004267 ms
 판정: 판정 불가 (UNDECIDED)
 
 성능 분석 (패턴 1개, 필터 1개) | 반복: 1000회/크기
 크기  | 평균 시간(ms) | MAC 횟수(N²)
-3×3 | 0.000637 | 9
+3×3 | 0.000504 | 9
+
+입력이 두 번째 행에서 끝난 경우
+$ python mini_npu.py
+[입력]
+1
+0 1 0
+[출력]
+Mini NPU 시뮬레이터
+1. 사용자 입력 (3×3)
+2. JSON 데이터 분석
+모드 선택 > 필터 A 입력 (3줄, 한 줄에 숫자 3개):
+  1행 >   2행 >
+입력 형식 오류: 필터 A은 3행이 필요합니다. 1행까지 받았습니다. 행 예시: 0 1 0. 다시 실행해 입력하세요.
 
 시연용 JSON
 $ python mini_npu.py
@@ -114,10 +133,10 @@ size_25_2 | Cross=1 | X=49 | 차이=48 | 판정: X | expected: X | PASS
 
 성능 분석 (패턴 1개, 필터 1개) | 반복: 1000회/크기
 크기  | 평균 시간(ms) | MAC 횟수(N²)
-3×3 | 0.000747 | 9
-5×5 | 0.001221 | 25
-13×13 | 0.006741 | 169
-25×25 | 0.021021 | 625
+3×3 | 0.000523 | 9
+5×5 | 0.001273 | 25
+13×13 | 0.005889 | 169
+25×25 | 0.021636 | 625
 
 전체: 6 | PASS: 6 | FAIL: 0
 실패 사례: 없음
@@ -137,26 +156,91 @@ size_5_2 | Cross=1 | X=9 | 차이=8 | 판정: X | expected: X | PASS
 
 성능 분석 (패턴 1개, 필터 1개) | 반복: 1000회/크기
 크기  | 평균 시간(ms) | MAC 횟수(N²)
-3×3 | 0.000519 | 9
-5×5 | 0.001249 | 25
-13×13 | 0.006075 | 169
-25×25 | 0.020153 | 625
+3×3 | 0.001870 | 9
+5×5 | 0.001102 | 25
+13×13 | 0.006039 | 169
+25×25 | 0.019687 | 625
 
 전체: 2 | PASS: 1 | FAIL: 1
 실패 사례:
   - size_5_1: 크기 불일치: 입력 패턴의 행은 5개여야 합니다 (실제 4개).
+
+JSON 동점과 요약 저장
+$ python mini_npu.py --epsilon 9 --repeats 20 --summary-json /workspace/scratch/b8b31cc364d6/CodysseyCalculator/tmp2t9v3xmj/summary.json
+[입력]
+2
+[출력]
+Mini NPU 시뮬레이터
+1. 사용자 입력 (3×3)
+2. JSON 데이터 분석
+모드 선택 >
+데이터 파일: data.json
+size_5_1 | Cross=9 | X=1 | 차이=8 | 판정: UNDECIDED | expected: Cross | FAIL
+size_5_2 | Cross=1 | X=9 | 차이=8 | 판정: UNDECIDED | expected: X | FAIL
+size_13_1 | Cross=25 | X=1 | 차이=24 | 판정: Cross | expected: Cross | PASS
+size_13_2 | Cross=1 | X=25 | 차이=24 | 판정: X | expected: X | PASS
+size_25_1 | Cross=49 | X=1 | 차이=48 | 판정: Cross | expected: Cross | PASS
+size_25_2 | Cross=1 | X=49 | 차이=48 | 판정: X | expected: X | PASS
+
+성능 분석 (패턴 1개, 필터 1개) | 반복: 20회/크기
+크기  | 평균 시간(ms) | MAC 횟수(N²)
+3×3 | 0.000558 | 9
+5×5 | 0.001097 | 25
+13×13 | 0.005522 | 169
+25×25 | 0.020537 | 625
+
+전체: 6 | PASS: 4 | FAIL: 2
+실패 사례:
+  - size_5_1: 동점 (UNDECIDED): 점수 차이 < 9, 정답 Cross
+  - size_5_2: 동점 (UNDECIDED): 점수 차이 < 9, 정답 X
+요약 저장: /workspace/scratch/b8b31cc364d6/CodysseyCalculator/tmp2t9v3xmj/summary.json
+[저장된 JSON]
+{
+  "total": 6,
+  "passed": 4,
+  "failed": 2,
+  "failures": [
+    {
+      "case_id": "size_5_1",
+      "reason": "동점 (UNDECIDED): 점수 차이 < 9, 정답 Cross"
+    },
+    {
+      "case_id": "size_5_2",
+      "reason": "동점 (UNDECIDED): 점수 차이 < 9, 정답 X"
+    }
+  ]
+}
+
+JSON 파일 경로 오류
+$ python mini_npu.py --data missing-data.json
+[입력]
+2
+[출력]
+Mini NPU 시뮬레이터
+1. 사용자 입력 (3×3)
+2. JSON 데이터 분석
+모드 선택 >
+실행 오류: JSON을 읽을 수 없습니다. 요청 경로: /workspace/scratch/b8b31cc364d6/CodysseyCalculator/missing-data.json
+기본 경로: /workspace/scratch/b8b31cc364d6/CodysseyCalculator/data.json
+원인: [Errno 2] No such file or directory: 'missing-data.json'
+UTF-8 JSON 파일을 확인하거나 --data로 경로를 지정하세요. 구조 예: filters.size_5.cross, filters.size_5.x, patterns.size_5_1의 input(5×5 배열)과 expected("+" 또는 "x").
 
 자동 테스트
 $ python tests/check_cases.py
 [출력]
 test_bad_size_is_reported_and_next_case_runs (__main__.ConsoleTests.test_bad_size_is_reported_and_next_case_runs) ... ok
 test_bundled_sample_passes_and_reports_all_sizes (__main__.ConsoleTests.test_bundled_sample_passes_and_reports_all_sizes) ... ok
+test_epsilon_and_repeats_apply_in_manual_mode (__main__.ConsoleTests.test_epsilon_and_repeats_apply_in_manual_mode) ... ok
+test_json_load_error_shows_path_and_expected_structure (__main__.ConsoleTests.test_json_load_error_shows_path_and_expected_structure) ... ok
+test_json_ties_are_counted_and_saved_with_reasons (__main__.ConsoleTests.test_json_ties_are_counted_and_saved_with_reasons) ... ok
 test_manual_mode_retries_and_classifies (__main__.ConsoleTests.test_manual_mode_retries_and_classifies) ... ok
 test_manual_mode_zero_pattern_is_undecided (__main__.ConsoleTests.test_manual_mode_zero_pattern_is_undecided) ... ok
+test_case_size_checks_format_and_supported_sizes (__main__.ScoreTests.test_case_size_checks_format_and_supported_sizes) ... ok
 test_epsilon_and_strict_boundary (__main__.ScoreTests.test_epsilon_and_strict_boundary) ... ok
 test_mac_matches_hand_calculation (__main__.ScoreTests.test_mac_matches_hand_calculation) ... ok
+test_normalize_filter_and_expected_labels (__main__.ScoreTests.test_normalize_filter_and_expected_labels) ... ok
 
 ----------------------------------------------------------------------
-Ran 6 tests in 0.227s
+Ran 11 tests in 0.297s
 
 OK
